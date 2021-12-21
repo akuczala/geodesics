@@ -6,13 +6,13 @@ authors = ["Alex Kuczala <kookzala@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-numpy = "~1.18.1"
-sympy = "~1.9"
-matplotlib = "~3.5.1"
-jupyterthemes = "~0.20.0"
-scipy = "~1.5.4"
+numpy = "^1.18.1"
+sympy = "^1.9"
+matplotlib = "^3.5.1"
+scipy = "^1.5.4"
 
 [tool.poetry.dev-dependencies]
+jupyterthemes = "^0.20.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

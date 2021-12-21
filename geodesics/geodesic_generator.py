@@ -1,7 +1,10 @@
+from typing import Dict
+
 import numpy as np
 import sympy as sp
 from scipy.integrate import solve_ivp
 
+from geodesics.constants import SympySymbol
 from geodesics.geodesic import Geodesic
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
@@ -27,7 +30,7 @@ class GeodesicGenerator:
         self.ivp_fun = self.get_ivp_fun()
 
     @property
-    def param_values(self):
+    def param_values(self) -> Dict[SympySymbol, float]:
         return self.metric_space.param_values
 
     def get_ivp_fun(self):
@@ -38,7 +41,7 @@ class GeodesicGenerator:
 
         return ivp_fun
 
-    def calc_geodesic(self, tv0: TangentVector, t_span, n_pts):
+    def calc_geodesic(self, tv0: TangentVector, t_span, n_pts) -> Geodesic:
         return Geodesic(solve_ivp(
             self.ivp_fun, t_span,
             t_eval=np.linspace(*t_span, n_pts),

@@ -3,7 +3,7 @@ from typing import Tuple, Dict, List
 import numpy as np
 import sympy as sp
 
-from geodesics.constants import SympySymbol, SympyArray, EPSILON
+from geodesics.constants import SympySymbol, SympyArray, EPSILON, SympyMatrix
 from geodesics.tangent_vector import TangentVector, TangentVectorType
 from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy
 
@@ -20,13 +20,13 @@ class MetricSpace:
         self.param_values = param_values
 
     @property
-    def dim(self):
+    def dim(self) -> int:
         return len(self.coordinates)
 
-    def pos_to_subs_dict(self, pos):
+    def pos_to_subs_dict(self, pos) -> Dict[SympySymbol, float]:
         return {coord: xi for coord, xi in zip(self.coordinates, pos)}
 
-    def eval_g(self, pos):
+    def eval_g(self, pos) -> np.ndarray:
         subs_dict = self.pos_to_subs_dict(pos)
         subs_dict.update(self.param_values)
         return np.array(self.g.subs(subs_dict).tolist(), dtype=np.float)
@@ -34,17 +34,17 @@ class MetricSpace:
     def inner(self, v1, v2, pos) -> float:
         return np.dot(v1, np.dot(self.eval_g(pos), v2)).item()
 
-    def normalize_tangent_vector(self, tv: TangentVector):
+    def normalize_tangent_vector(self, tv: TangentVector) -> TangentVector:
         assert self.classify_tangent_vector(tv) != TangentVectorType.NULL
         return TangentVector(x=tv.x, u=tv.u / np.sqrt(np.abs(self.tangent_vector_sqlen(tv))))
 
-    def tangent_vector_sqlen(self, tv: TangentVector):
+    def tangent_vector_sqlen(self, tv: TangentVector) -> float:
         return self.inner(tv.u, tv.u, tv.x)
 
     def classify_tangent_vector(self, tv: TangentVector) -> TangentVectorType:
         return TangentVectorType.len_to_type(self.tangent_vector_sqlen(tv))
 
-    def calc_coordinate_tangents(self):
+    def calc_coordinate_tangents(self) -> List[SympyMatrix]:
         return [sp.Matrix([1 / sp.sqrt(abs(self.g[i, i])) if j == i else sp.S(0) for j in range(self.dim)]) for i in
                 range(self.dim)]
 
@@ -55,7 +55,7 @@ class MetricSpace:
             for u in self.calc_coordinate_tangents()
         ]
 
-    def calc_null_tangent(self, v1, v2, pos):
+    def calc_null_tangent(self, v1, v2, pos) -> np.ndarray:
         """
         Calculate a null tangent vector from one timelike vector and one spacelike vector
         """
@@ -69,10 +69,10 @@ class MetricSpace:
             raise ValueError(f"Could not solve for null vector using timelike {vt} and spacelike {vs}")
         return vt + positive_sols[0] * vs
 
-    def calc_ortho_tangent_vector(self, tv: TangentVector, d):
+    def calc_ortho_tangent_vector(self, tv: TangentVector, d) -> TangentVector:
         return TangentVector(x=tv.x, u=d - self.inner(tv.u, d, tv.x) / self.inner(tv.u, tv.u, tv.x) * tv.u)
 
-    def calc_christoffel(self):
+    def calc_christoffel(self) -> SympyArray:
         dg = sp.permutedims(sp.derive_by_array(self.g, self.coordinates), (1, 2, 0))  # dg_ij/dx_k
         # dg_mk,l + dg_ml,k - dg_kl,m
         # m -> 0, k -> 1, l -> 2

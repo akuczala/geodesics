@@ -11,12 +11,14 @@ class TangentVector:
     x: np.ndarray
     u: np.ndarray
 
+
 class TangentVectorType(Enum):
     TIMELIKE = 1
     SPACELIKE = -1
     NULL = 0
+
     @classmethod
-    def len_to_type(cls, sqlength: float):
+    def len_to_type(cls, sqlength: float) -> "TangentVectorType":
         if sqlength > EPSILON_SQ:
             return cls.TIMELIKE
         elif sqlength < -EPSILON_SQ:
