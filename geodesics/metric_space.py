@@ -55,11 +55,14 @@ class MetricSpace:
             for u in self.calc_coordinate_tangents()
         ]
 
-    def calc_null_tangent(self, v1, v2, pos) -> np.ndarray:
+    def calc_null_tangent(self, v1: np.ndarray, v2: np.ndarray, pos: np.ndarray) -> np.ndarray:
         """
         Calculate a null tangent vector from one timelike vector and one spacelike vector
         """
-        vtype_dict = {self.classify_tangent_vector(TangentVector(x=pos, u=v)): v for v in (v1, v2)}
+        v1_type, v2_type = [self.classify_tangent_vector(TangentVector(x=pos, u=v)) for v in (v1, v2)]
+        vtype_dict = {v1_type: v1, v2_type: v2}
+        if not (TangentVectorType.TIMELIKE in vtype_dict and TangentVectorType.SPACELIKE in vtype_dict):
+            raise ValueError(f"Cannot calculate null vector with vectors {v1} ({v1_type}), {v2} ({v2_type})")
         vt, vs = vtype_dict[TangentVectorType.TIMELIKE], vtype_dict[TangentVectorType.SPACELIKE]
         dot = lambda v1, v2: self.inner(v1, v2, pos)
         # return vec of form vt + s vs
