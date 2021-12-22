@@ -5,17 +5,51 @@ import sympy as sp
 from scipy.integrate import solve_ivp
 
 from geodesics.constants import SympySymbol
-from geodesics.geodesic import Geodesic
+from geodesics.geodesic import Geodesic, y_to_x, y_to_u
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
 
 
+class TerminationCondition:
+    def __init__(self, cond):
+        self.cond = cond
+
+    @classmethod
+    def none(cls) -> "TerminationCondition":
+        return cls(None)
+
+    # @classmethod
+    # def stop_on_sympy_true(cls, sympy_cond: SympyBoolean, metric: MetricSpace) -> "TerminationCondition":
+    #     def cond(t, y):
+    #         boolean(sympy_cond.subs(metric.pos_to_subs_dict(y[:len(y)//2])))
+    @classmethod
+    def stop_on_sympy_zero(cls, sympy_expr, metric: MetricSpace) -> "TerminationCondition":
+        def cond(t, y, *args):
+            return float(sympy_expr.subs(metric.pos_to_subs_dict(y_to_x(y))))
+
+        cond.terminal = True
+        return cls(cond)
+
+    @classmethod
+    def stop_on_coordinate_value(cls, coordinate_index: int, value: float) -> "TerminationCondition":
+        def cond(t, y, *args):
+            return y_to_x(y)[coordinate_index] - value
+
+        cond.terminal = True
+        return cls(cond)
+
+    @property
+    def condition(self):
+        return self.cond
+
+
 class GeodesicGenerator:
-    def __init__(self, metric_space: MetricSpace):
+    def __init__(self, metric_space: MetricSpace, termination_condition=TerminationCondition.none()):
         self.metric_space = metric_space
         u = sp.IndexedBase('u')
         uvec = sp.Array([u[i] for i in range(len(metric_space.coordinates))])
         self.y = metric_space.coordinates + tuple(uvec.tolist())
+        self.termination_condition = termination_condition
         # ^i_jk u^m u^n
         # ^i_k u^n
         Guu = sp.tensorcontraction(
@@ -36,7 +70,7 @@ class GeodesicGenerator:
     def get_ivp_fun(self):
         def ivp_fun(t, y, *params):
             udot = -self.Guu_np(*y, *params)
-            xdot = y[len(y) // 2:]
+            xdot = y_to_u(y)
             return np.concatenate((xdot, udot))
 
         return ivp_fun
@@ -47,5 +81,6 @@ class GeodesicGenerator:
             t_eval=np.linspace(*t_span, n_pts),
             y0=np.concatenate((tv0.x, tv0.u)),
             args=tuple(self.metric_space.param_values[symbol] for symbol in self.metric_space.params),
-            dense_output=True
+            dense_output=True,
+            events=self.termination_condition.condition
         ))

@@ -5,6 +5,14 @@ from numpy import ndarray
 from geodesics.tangent_vector import TangentVector
 
 
+def y_to_x(y):
+    return y[:len(y) // 2]
+
+
+def y_to_u(y):
+    return y[len(y) // 2:]
+
+
 class Geodesic:
     def __init__(self, sol):
         self.sol = sol
@@ -15,11 +23,11 @@ class Geodesic:
 
     @property
     def x(self) -> ndarray:
-        return self.sol.y[:self.dim // 2].T
+        return y_to_x(self.sol.y).T
 
     @property
     def u(self) -> ndarray:
-        return self.sol.y[self.dim // 2:].T
+        return y_to_u(self.sol.y).T
 
     @property
     def tv(self) -> List[TangentVector]:

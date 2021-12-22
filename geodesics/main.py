@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from jupyterthemes import jtplot
 
 from geodesics.geodesic import Geodesic
-from geodesics.geodesic_generator import GeodesicGenerator
+from geodesics.geodesic_generator import GeodesicGenerator, TerminationCondition
 from geodesics.metric_library import sc_metric_generator, zee_metric_generator
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
@@ -57,7 +57,7 @@ def plot_light_cone(gg: GeodesicGenerator, tv: TangentVector):
         plt.plot(geo.x[:, 1], geo.x[:, 0], c='yellow')
 
 
-def plot_tangent_light_cone(gg: GeodesicGenerator, tv: TangentVector, size=1):
+def plot_tangent_light_cone(gg: GeodesicGenerator, tv: TangentVector, size: float = 1.0):
     timelike_v = tv.u
     spacelike_v = gg.metric_space.calc_ortho_tangent_vector(tv, np.array([0, 1])).u
     for s in (-1, 1):
@@ -88,10 +88,12 @@ def plot_test(metric: MetricSpace):
 
 
 def plot_test_3(metric: MetricSpace):
-    gg = GeodesicGenerator(metric)
-    for r0 in (2,3,4,5):
+    gg = GeodesicGenerator(
+        metric, termination_condition=TerminationCondition.stop_on_coordinate_value(1, 0.02)
+    )
+    for r0 in (2, 3, 4, 5):
         worldline = gg.calc_geodesic(
-            metric.normalize_tangent_vector(TangentVector(x=np.array([0, r0]), u=np.array([0.9, 0.1]))),
+            metric.normalize_tangent_vector(TangentVector(x=np.array([0, r0]), u=np.array([1.0, 0.]))),
             t_span=(0, 12), n_pts=20
         )
         plt.plot(worldline.x[:, 1], worldline.x[:, 0], c='red')
