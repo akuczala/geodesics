@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 from numpy import ndarray
 
 from geodesics.tangent_vector import TangentVector
@@ -11,6 +12,14 @@ def y_to_x(y):
 
 def y_to_u(y):
     return y[len(y) // 2:]
+
+
+def x_u_to_y(x, u):
+    return np.concatenate((x, u))
+
+
+def tv_to_y(tv: TangentVector):
+    return x_u_to_y(tv.x, tv.u)
 
 
 class Geodesic:

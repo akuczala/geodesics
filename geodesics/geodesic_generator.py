@@ -5,7 +5,7 @@ import sympy as sp
 from scipy.integrate import solve_ivp
 
 from geodesics.constants import SympySymbol
-from geodesics.geodesic import Geodesic, y_to_x, y_to_u
+from geodesics.geodesic import Geodesic, y_to_x, y_to_u, x_u_to_y
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
 
@@ -52,16 +52,16 @@ class GeodesicGenerator:
         self.termination_condition = termination_condition
         # ^i_jk u^m u^n
         # ^i_k u^n
-        Guu = sp.tensorcontraction(
+        self.Guu = sp.simplify(sp.tensorcontraction(
             sp.tensorcontraction(
                 sp.tensorproduct(metric_space.christ, uvec, uvec), (1, 3)
             ),
             (1, 2)
-        )
-        Guu_list = sp.lambdify(self.y + metric_space.params, Guu, 'numpy')
+        ))
+        Guu_list = sp.lambdify(self.y + metric_space.params, self.Guu, 'numpy')
         self.Guu_np = lambda *args: np.array(Guu_list(*args))
-        # Guu_jac = sp.derive_by_array(Guu,self.y)
         self.ivp_fun = self.get_ivp_fun()
+        self.jac_fun = self.get_jac_fun()
 
     @property
     def param_values(self) -> Dict[SympySymbol, float]:
@@ -71,16 +71,31 @@ class GeodesicGenerator:
         def ivp_fun(t, y, *params):
             udot = -self.Guu_np(*y, *params)
             xdot = y_to_u(y)
-            return np.concatenate((xdot, udot))
+            return x_u_to_y(xdot, udot)
 
         return ivp_fun
 
-    def calc_geodesic(self, tv0: TangentVector, t_span, n_pts) -> Geodesic:
+    def get_jac_fun(self):
+        # df_i/dy_j
+        u = sp.IndexedBase('u')
+        f = sp.Array([u[i] for i in range(len(self.metric_space.coordinates))] + list(self.Guu))
+        jac_expr = sp.simplify(sp.permutedims(sp.derive_by_array(f, self.y), (1, 0)))
+        jac_list = sp.lambdify(self.y + self.metric_space.params, jac_expr, 'numpy')
+        jac_np = lambda *args: np.array(jac_list(*args))
+
+        def jac_fun(t, y, *params):
+            return jac_np(*y, *params)
+
+        return jac_fun
+
+    def calc_geodesic(self, tv0: TangentVector, t_range) -> Geodesic:
         return Geodesic(solve_ivp(
-            self.ivp_fun, t_span,
-            t_eval=np.linspace(*t_span, n_pts),
+            self.ivp_fun, (t_range[0], t_range[-1]),
+            t_eval=t_range,
             y0=np.concatenate((tv0.x, tv0.u)),
             args=tuple(self.metric_space.param_values[symbol] for symbol in self.metric_space.params),
+            jac=self.jac_fun,
             dense_output=True,
-            events=self.termination_condition.condition
+            events=self.termination_condition.condition,
+            method='Radau'
         ))

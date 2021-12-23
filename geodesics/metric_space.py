@@ -5,11 +5,11 @@ import sympy as sp
 
 from geodesics.constants import SympySymbol, SympyArray, EPSILON, SympyMatrix
 from geodesics.tangent_vector import TangentVector, TangentVectorType
-from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy
+from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy, calc_orthogonal, gram_schmidt
 
 
 class MetricSpace:
-    def __init__(self, coordinates: Tuple[SympySymbol], params: Tuple[SympySymbol], g: SympyArray,
+    def __init__(self, coordinates: Tuple[SympySymbol, ...], params: Tuple[SympySymbol, ...], g: SympyArray,
                  param_values: Dict[SympySymbol, float]):
         self.coordinates = coordinates
         self.params = params
@@ -31,6 +31,7 @@ class MetricSpace:
         subs_dict.update(self.param_values)
         return np.array(self.g.subs(subs_dict).tolist(), dtype=np.float)
 
+    # todo return function
     def inner(self, v1, v2, pos) -> float:
         return np.dot(v1, np.dot(self.eval_g(pos), v2)).item()
 
@@ -73,7 +74,10 @@ class MetricSpace:
         return vt + positive_sols[0] * vs
 
     def calc_ortho_tangent_vector(self, tv: TangentVector, d) -> TangentVector:
-        return TangentVector(x=tv.x, u=d - self.inner(tv.u, d, tv.x) / self.inner(tv.u, tv.u, tv.x) * tv.u)
+        return TangentVector(x=tv.x, u=calc_orthogonal(lambda v1, v2: self.inner(v1, v2, tv.x), tv.u, d))
+
+    def calc_tangent_basis(self, pos: np.ndarray):
+        return gram_schmidt(lambda v1, v2: self.inner(v1, v2, pos), np.eye(self.dim))
 
     def calc_christoffel(self) -> SympyArray:
         dg = sp.permutedims(sp.derive_by_array(self.g, self.coordinates), (1, 2, 0))  # dg_ij/dx_k

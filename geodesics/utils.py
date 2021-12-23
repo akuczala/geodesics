@@ -1,3 +1,6 @@
+from functools import reduce
+from typing import List
+
 import numpy as np
 
 from geodesics.constants import EPSILON
@@ -17,3 +20,18 @@ def solve_real_quad(a, b, c):
     if det > EPSILON:
         return list((-b + np.array([-1, 1]) * np.sqrt(det)) / (2 * a))
     return [-b / (2 * a)]
+
+
+def gram_schmidt(inner, basis: np.ndarray) -> List[np.ndarray]:
+    return reduce(
+        lambda vecs, b: vecs + [b - sum(project(inner, v, b) for v in vecs)],
+        basis[1:], [basis[0]]
+    )
+
+
+def calc_orthogonal(inner, v: np.ndarray, d: np.ndarray) -> np.ndarray:
+    return d - project(inner, v, d)
+
+
+def project(inner, onto_u, v):
+    return inner(onto_u, v) / inner(onto_u, onto_u) * onto_u
