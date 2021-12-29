@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import List
+from typing import List, Iterable
 
 import numpy as np
 
@@ -7,7 +7,7 @@ from geodesics.constants import EPSILON
 
 
 def sympy_matrix_to_numpy(sp_mat):
-    return np.array(sp_mat, dtype=np.float)
+    return np.array(sp_mat, dtype=float)
 
 
 def solve_real_quad(a, b, c):
@@ -22,7 +22,7 @@ def solve_real_quad(a, b, c):
     return [-b / (2 * a)]
 
 
-def gram_schmidt(inner, basis: np.ndarray) -> List[np.ndarray]:
+def gram_schmidt(inner, basis: Iterable[np.ndarray]) -> List[np.ndarray]:
     return reduce(
         lambda vecs, b: vecs + [b - sum(project(inner, v, b) for v in vecs)],
         basis[1:], [basis[0]]

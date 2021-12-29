@@ -1,16 +1,17 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Optional
 
 import numpy as np
 import sympy as sp
 
 from geodesics.constants import SympySymbol, SympyArray, EPSILON, SympyMatrix
+from geodesics.coordinate_map import CoordinateMap
 from geodesics.tangent_vector import TangentVector, TangentVectorType
 from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy, calc_orthogonal, gram_schmidt
 
 
 class MetricSpace:
     def __init__(self, coordinates: Tuple[SympySymbol, ...], params: Tuple[SympySymbol, ...], g: SympyArray,
-                 param_values: Dict[SympySymbol, float]):
+                 param_values: Dict[SympySymbol, float], spatial_to_cartesian_map: Optional[CoordinateMap]=None):
         self.coordinates = coordinates
         self.params = params
         self.g = g
@@ -18,6 +19,7 @@ class MetricSpace:
         self.christ = self.calc_christoffel()
 
         self.param_values = param_values
+        self.spatial_to_cartesian_map = spatial_to_cartesian_map
 
     @property
     def dim(self) -> int:
@@ -71,13 +73,34 @@ class MetricSpace:
         positive_sols = [s for s in quad_sols if s > EPSILON]
         if len(positive_sols) == 0:
             raise ValueError(f"Could not solve for null vector using timelike {vt} and spacelike {vs}")
-        return vt + positive_sols[0] * vs
+        null_vec = vt + positive_sols[0] * vs
+        if self.classify_tangent_vector(TangentVector(x=pos,u=null_vec)) == TangentVectorType.NULL:
+            return null_vec
+        else:
+            raise ValueError(f"Solution {null_vec} is not null. Input {v1},{v2} at position {pos}")
 
     def calc_ortho_tangent_vector(self, tv: TangentVector, d) -> TangentVector:
         return TangentVector(x=tv.x, u=calc_orthogonal(lambda v1, v2: self.inner(v1, v2, tv.x), tv.u, d))
 
     def calc_tangent_basis(self, pos: np.ndarray):
         return gram_schmidt(lambda v1, v2: self.inner(v1, v2, pos), np.eye(self.dim))
+
+    def calc_spatial_basis_for_timelike_tangent(self, tv: TangentVector):
+        if not self.classify_tangent_vector(tv) == TangentVectorType.TIMELIKE:
+            raise ValueError(f"Input {tv} is not timelike")
+        pos = tv.x
+        timelike_v = tv.u
+        drop_i = np.argmax(np.abs(timelike_v))
+        # rm basis vector with largest euclidean projection onto timelike vec
+        basis = np.delete(np.eye(self.dim), drop_i, axis=0)
+        basis = [timelike_v] + list(basis)
+        #print(basis)
+        # spacelike_vecs = [
+        #     v for v in vecs
+        #     if self.classify_tangent_vector(TangentVector(x=pos, u=v)) == TangentVectorType.SPACELIKE
+        # ][:self.dim-1]
+        # print(spacelike_vecs)
+        return gram_schmidt(lambda v1, v2: self.inner(v1, v2, pos), basis)[1:]
 
     def calc_christoffel(self) -> SympyArray:
         dg = sp.permutedims(sp.derive_by_array(self.g, self.coordinates), (1, 2, 0))  # dg_ij/dx_k

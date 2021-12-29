@@ -3,7 +3,6 @@ import sympy as sp
 from matplotlib import pyplot as plt
 from jupyterthemes import jtplot
 
-from blenderhelper.draw_test import draw_test
 from geodesics.geodesic import Geodesic
 from geodesics.geodesic_generator import GeodesicGenerator, TerminationCondition
 from geodesics.metric_library import sc_metric_generator, zee_metric_generator
@@ -121,17 +120,17 @@ def plot_test_2(gg: GeodesicGenerator):
     plt.show()
 
 
-jtplot.style()
-metric = zee_metric_generator(3, 1.0)
+#jtplot.style()
+#metric = zee_metric_generator(3, 1.0)
 # plot_test_2(GeodesicGenerator(metric))
 #plot_test_3(metric)
 # metric.get_coordinate_tangents_at_pos(np.array([0, 1.0]))
 
 # plot_world_space_lines(metric )
-geo = draw_test([0,2,0],[1,0.0,0.03],np.arange(0,10, 0.2))
-fig, axes = plt.subplots(4,2)
-for i in range(3):
-    axes[i, 0].plot(geo.tau,geo.x[:,i])
-    axes[i, 1].plot(geo.tau, geo.u[:,i])
-axes[-1,1].plot([metric.tangent_vector_sqlen(tv) for tv in geo.tv])
-plt.show()
+# geo = draw_test([0,2,0],[1,0.0,0.03],np.arange(0,10, 0.2))
+# fig, axes = plt.subplots(4,2)
+# for i in range(3):
+#     axes[i, 0].plot(geo.tau,geo.x[:,i])
+#     axes[i, 1].plot(geo.tau, geo.u[:,i])
+# axes[-1,1].plot([metric.tangent_vector_sqlen(tv) for tv in geo.tv])
+# plt.show()

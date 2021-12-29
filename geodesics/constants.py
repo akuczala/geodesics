@@ -5,5 +5,5 @@ SympyMatrix = sp.matrices.dense.MutableDenseMatrix
 SympySymbol = sp.core.symbol.Symbol
 SympyBoolean = sp.logic.boolalg.Boolean
 
-EPSILON = 1e-8
+EPSILON = 1e-6
 EPSILON_SQ = EPSILON * EPSILON
