@@ -44,7 +44,7 @@ class TerminationCondition:
 
 
 class GeodesicGenerator:
-    def __init__(self, metric_space: MetricSpace, termination_condition=TerminationCondition.none()):
+    def __init__(self, metric_space: MetricSpace, termination_condition=TerminationCondition.none(), simplify_fn=lambda x: x):
         self.metric_space = metric_space
         u = sp.IndexedBase('u')
         uvec = sp.Array([u[i] for i in range(len(metric_space.coordinates))])
@@ -52,7 +52,7 @@ class GeodesicGenerator:
         self.termination_condition = termination_condition
         # ^i_jk u^m u^n
         # ^i_k u^n
-        self.Guu = sp.simplify(sp.tensorcontraction(
+        self.Guu = simplify_fn(sp.tensorcontraction(
             sp.tensorcontraction(
                 sp.tensorproduct(metric_space.christ, uvec, uvec), (1, 3)
             ),
@@ -61,7 +61,7 @@ class GeodesicGenerator:
         Guu_list = sp.lambdify(self.y + metric_space.params, self.Guu, 'numpy')
         self.Guu_np = lambda *args: np.array(Guu_list(*args))
         self.ivp_fun = self.get_ivp_fun()
-        self.jac_fun = self.get_jac_fun()
+        self.jac_fun = self.get_jac_fun(simplify_fn)
 
     @property
     def param_values(self) -> Dict[SympySymbol, float]:
@@ -75,11 +75,11 @@ class GeodesicGenerator:
 
         return ivp_fun
 
-    def get_jac_fun(self):
+    def get_jac_fun(self, simplify_fn):
         # df_i/dy_j
         u = sp.IndexedBase('u')
         f = sp.Array([u[i] for i in range(len(self.metric_space.coordinates))] + list(self.Guu))
-        jac_expr = sp.simplify(sp.permutedims(sp.derive_by_array(f, self.y), (1, 0)))
+        jac_expr = simplify_fn(sp.permutedims(sp.derive_by_array(f, self.y), (1, 0)))
         jac_list = sp.lambdify(self.y + self.metric_space.params, jac_expr, 'numpy')
         jac_np = lambda *args: np.array(jac_list(*args))
 
