@@ -1,16 +1,6 @@
-import numpy as np
 import sympy as sp
 
-from geodesics.coordinate_map import CoordinateMap
 from geodesics.metric_space import MetricSpace
-from geodesics.tangent_vector import TangentVector
-
-r, ph = sp.symbols('r ph')
-POLAR_MAPPING = CoordinateMap(
-    domain_coordinates=sp.symbols('r ph'),
-    image_coordinates=sp.symbols('x y'),
-    mapping=sp.Array([r * sp.cos(ph), r * sp.sin(ph)])
-)
 
 
 def flat(dim: int) -> MetricSpace:
@@ -40,8 +30,7 @@ def flat_polar(dim: int) -> MetricSpace:
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
         params=tuple(),
         g=g[:dim, :dim],
-        param_values={},
-        spatial_to_cartesian_map=POLAR_MAPPING  # todo generalize to spherical
+        param_values={}
     )
 
 
@@ -58,8 +47,7 @@ def sc_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
         params=(rs,),
         g=g[:dim, :dim],
-        param_values={rs: rs_val},
-        spatial_to_cartesian_map=POLAR_MAPPING  # todo generalize to spherical
+        param_values={rs: rs_val}
     )
 
 
@@ -75,8 +63,7 @@ def zee_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         coordinates={2: (tb, r), 3: (tb, r, ph), 4: (tb, r, th, ph)}[dim],
         params=(rs,),
         g=g[:dim, :dim],
-        param_values={rs: rs_val},
-        spatial_to_cartesian_map=POLAR_MAPPING
+        param_values={rs: rs_val}
     )
 
 
@@ -92,8 +79,7 @@ def ori_2007_metric_generator(dim: int, mu_val: float) -> MetricSpace:
         coordinates={2: (v, r), 3: (v, r, ph), 4: (v, r, th, ph)}[dim],
         params=(mu,),
         g=g[:dim, :dim],
-        param_values={mu: mu_val},
-        spatial_to_cartesian_map=POLAR_MAPPING
+        param_values={mu: mu_val}
     )
 
 
@@ -108,8 +94,8 @@ def ori_1993_metric_generator(dim: int, a_val, b_val, r0_val, d_val):
         [0, 0, -r ** 2, 0],
         [0, 0, 0, -1]
     ])
-    t_dep = 2 * sp.sin(sp.pi * a * t / 2)**2
-    #t_dep = a * t
+    t_dep = 2 * sp.sin(sp.pi * a * t / 2) ** 2
+    # t_dep = a * t
     gm_t_ph = r * h * t_dep
     gm_r_ph = r * h * (-b) * (r - r0)
     gm_z_ph = r * h * z
@@ -127,6 +113,23 @@ def ori_1993_metric_generator(dim: int, a_val, b_val, r0_val, d_val):
         coordinates=(t, r, ph, z)[:dim],
         params=(a, b, r0, d),
         g=g[:dim, :dim],
-        param_values={a: a_val, b: b_val, r0: r0_val, d: d_val},
-        spatial_to_cartesian_map=POLAR_MAPPING
+        param_values={a: a_val, b: b_val, r0: r0_val, d: d_val}
+    )
+
+
+# r ∈ (-∞,∞)
+def morris_thorne_wormhole_generator(dim: int, b0_val: float) -> MetricSpace:
+    assert dim > 2
+    t, r, ph, th, b0 = sp.symbols('t r ph th b0')
+    g = sp.Array([
+        [1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, -(b0 ** 2 + r ** 2), 0],
+        [0, 0, 0, -(b0 ** 2 + r ** 2) * sp.sin(th)]
+    ])
+    return MetricSpace(
+        coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
+        params=(b0,),
+        g=g[:dim, :dim],
+        param_values={b0: b0_val}
     )

@@ -1,5 +1,6 @@
 import numpy as np
 
+from geodesics.coordinate_map_library import POLAR_MAPPING
 from geodesics.draw import get_light_cone_vecs
 from geodesics.metric_library import sc_metric_generator, zee_metric_generator
 from geodesics.tangent_vector import TangentVector, TangentVectorType
@@ -43,5 +44,5 @@ def test_spatial_basis():
 
 metric = zee_metric_generator(3, 1.0)
 x = np.array([0, 2, 0])
-vecs = get_light_cone_vecs(metric, TangentVector(x=np.array([0, 2, 0]), u=np.array([1, 0, 0])), 8)
+vecs = get_light_cone_vecs(metric, POLAR_MAPPING, TangentVector(x=np.array([0, 2, 0]), u=np.array([1, 0, 0])), 8)
 print([metric.classify_tangent_vector(TangentVector(u=v, x=x)) for v in vecs])

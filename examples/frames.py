@@ -9,6 +9,7 @@ import sympy as sp
 # metric = geodesics.metric_library.zee_metric_generator(3, 1.0)
 from blenderhelper.draw_data import DrawDataList, CurveData, FrameData, ConeData
 from geodesics.coordinate_map import CoordinateMap
+from geodesics.coordinate_map_library import POLAR_MAPPING
 from geodesics.draw import get_light_cone_vecs
 from geodesics.geodesic_generator import TerminationCondition, GeodesicGenerator
 from geodesics.metric_library import flat_polar, zee_metric_generator
@@ -50,7 +51,7 @@ for r0, ph0 in itertools.product([3], np.linspace(0, 2 * np.pi, 9)[:-1]):
         ]
         light_cone_vecs = [
             0.5 * cartesian_mapping.tangent_map(TangentVector(tv.x, v)).u
-            for v in get_light_cone_vecs(metric, timelike_tv=tv, n_vecs=16)
+            for v in get_light_cone_vecs(metric, POLAR_MAPPING, timelike_tv=tv, n_vecs=16)
         ]
         draw_data.append(
             FrameData(

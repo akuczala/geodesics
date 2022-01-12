@@ -6,15 +6,15 @@ from numpy import ndarray
 from geodesics.tangent_vector import TangentVector
 
 
-def y_to_x(y):
+def y_to_x(y: np.ndarray) -> ndarray:
     return y[:len(y) // 2]
 
 
-def y_to_u(y):
+def y_to_u(y: np.ndarray) -> np.ndarray:
     return y[len(y) // 2:]
 
 
-def x_u_to_y(x, u):
+def x_u_to_y(x: np.ndarray, u: np.ndarray) -> np.ndarray:
     return np.concatenate((x, u))
 
 

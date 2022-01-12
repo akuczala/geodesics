@@ -5,11 +5,13 @@ description = "Calculates geodesics in GR"
 authors = ["Alex Kuczala <kookzala@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.10"
 numpy = "^1.18.1"
 sympy = "^1.9"
 matplotlib = "^3.5.1"
 scipy = "^1.5.4"
+numba = "^0.54.1"
+NumbaLSODA = "^0.1.5"
 
 [tool.poetry.dev-dependencies]
 jupyterthemes = "^0.20.0"

@@ -11,7 +11,7 @@ from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy, calc_orthogo
 
 class MetricSpace:
     def __init__(self, coordinates: Tuple[SympySymbol, ...], params: Tuple[SympySymbol, ...], g: SympyArray,
-                 param_values: Dict[SympySymbol, float], spatial_to_cartesian_map: Optional[CoordinateMap]=None):
+                 param_values: Dict[SympySymbol, float]):
         self.coordinates = coordinates
         self.params = params
         self.g = g
@@ -19,7 +19,8 @@ class MetricSpace:
         self.christ = self.calc_christoffel()
 
         self.param_values = param_values
-        self.spatial_to_cartesian_map = spatial_to_cartesian_map
+
+        self.g_lambda = sp.lambdify([self.coordinates], sp.Matrix(g.subs(self.param_values)), 'numpy')
 
     @property
     def dim(self) -> int:
@@ -29,9 +30,7 @@ class MetricSpace:
         return {coord: xi for coord, xi in zip(self.coordinates, pos)}
 
     def eval_g(self, pos) -> np.ndarray:
-        subs_dict = self.pos_to_subs_dict(pos)
-        subs_dict.update(self.param_values)
-        return np.array(self.g.subs(subs_dict).tolist(), dtype=np.float)
+        return self.g_lambda(pos)
 
     # todo return function
     def inner(self, v1, v2, pos) -> float:
@@ -78,6 +77,29 @@ class MetricSpace:
             return null_vec
         else:
             raise ValueError(f"Solution {null_vec} is not null. Input {v1},{v2} at position {pos}")
+
+    def calc_null_tangent_fast(self, v_timelike: np.ndarray, v_spacelike: np.ndarray, pos: np.ndarray, check=True) -> np.ndarray:
+        """
+        Calculate a null tangent vector from one timelike vector and one spacelike vector.
+        Not actually that much faster
+        """
+        if check:
+            if not self.classify_tangent_vector(TangentVector(x=pos, u=v_timelike)) == TangentVectorType.TIMELIKE:
+                raise ValueError(f"{v_timelike} is not timelike")
+            if not self.classify_tangent_vector(TangentVector(x=pos, u=v_spacelike)) == TangentVectorType.SPACELIKE:
+                raise ValueError(f"{v_spacelike} is not spacelike")
+        vt, vs = v_timelike, v_spacelike
+        dot = lambda v1, v2: self.inner(v1, v2, pos)
+        # return vec of form vt + s vs
+        quad_sols = solve_real_quad(a=dot(vs, vs), b=2 * dot(vt, vs), c=dot(vt, vt))
+        positive_sols = [s for s in quad_sols if s > EPSILON]
+        if len(positive_sols) == 0:
+            raise ValueError(f"Could not solve for null vector using timelike {vt} and spacelike {vs}")
+        null_vec = vt + positive_sols[0] * vs
+        if self.classify_tangent_vector(TangentVector(x=pos,u=null_vec)) == TangentVectorType.NULL:
+            return null_vec
+        else:
+            raise ValueError(f"Solution {null_vec} is not null. Input {vt},{vs} at position {pos}")
 
     def calc_ortho_tangent_vector(self, tv: TangentVector, d) -> TangentVector:
         return TangentVector(x=tv.x, u=calc_orthogonal(lambda v1, v2: self.inner(v1, v2, tv.x), tv.u, d))

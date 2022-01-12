@@ -5,45 +5,13 @@ import sympy as sp
 from scipy.integrate import solve_ivp
 
 from geodesics.constants import SympySymbol
-from geodesics.geodesic import Geodesic, y_to_x, y_to_u, x_u_to_y
+from geodesics.geodesic import Geodesic, y_to_u, x_u_to_y
+from geodesics.geodesic_generator import TerminationCondition
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
 
 
-class TerminationCondition:
-    def __init__(self, cond):
-        self.cond = cond
-
-    @classmethod
-    def none(cls) -> "TerminationCondition":
-        return cls(None)
-
-    # @classmethod
-    # def stop_on_sympy_true(cls, sympy_cond: SympyBoolean, metric: MetricSpace) -> "TerminationCondition":
-    #     def cond(t, y):
-    #         boolean(sympy_cond.subs(metric.pos_to_subs_dict(y[:len(y)//2])))
-    @classmethod
-    def stop_on_sympy_zero(cls, sympy_expr, metric: MetricSpace) -> "TerminationCondition":
-        def cond(t, y, *args):
-            return float(sympy_expr.subs(metric.pos_to_subs_dict(y_to_x(y))))
-
-        cond.terminal = True
-        return cls(cond)
-
-    @classmethod
-    def stop_on_coordinate_value(cls, coordinate_index: int, value: float) -> "TerminationCondition":
-        def cond(t, y, *args):
-            return y_to_x(y)[coordinate_index] - value
-
-        cond.terminal = True
-        return cls(cond)
-
-    @property
-    def condition(self):
-        return self.cond
-
-
-class GeodesicGenerator:
+class ScipyGeodesicGenerator:
     def __init__(self, metric_space: MetricSpace, termination_condition=TerminationCondition.none(), simplify_fn=lambda x: x):
         self.metric_space = metric_space
         u = sp.IndexedBase('u')
