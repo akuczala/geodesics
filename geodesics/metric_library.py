@@ -19,12 +19,12 @@ def flat(dim: int) -> MetricSpace:
 
 
 def flat_polar(dim: int) -> MetricSpace:
-    t, r, th, ph, rs = sp.symbols('tb r θ φ rs')
+    t, r, th, ph = sp.symbols('tb r θ φ')
     g = sp.Array([
         [1, 0, 0, 0],
         [0, -1, 0, 0],
         [0, 0, -r ** 2, 0],
-        [0, 0, 0, -r ** 2 * sp.sin(th)]
+        [0, 0, 0, -(r * sp.sin(th)) **2]
     ])
     return MetricSpace(
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
@@ -40,7 +40,7 @@ def sc_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         [(1 - rs / r), 0, 0, 0],
         [0, -(1 - rs / r) ** (-1), 0, 0],
         [0, 0, -r ** 2, 0],
-        [0, 0, 0, -r ** 2 * sp.sin(th)]
+        [0, 0, 0, -(r * sp.sin(th)) **2]
     ])
 
     return MetricSpace(
@@ -57,7 +57,7 @@ def zee_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         [(rs - r) / r, 2 * rs / r, 0, 0],
         [2 * rs / r, (r + rs) / r, 0, 0],
         [0, 0, r ** 2, 0],
-        [0, 0, 0, r ** 2 * sp.sin(th)]
+        [0, 0, 0, (r * sp.sin(th)) **2]
     ])
     return MetricSpace(
         coordinates={2: (tb, r), 3: (tb, r, ph), 4: (tb, r, th, ph)}[dim],
@@ -73,7 +73,7 @@ def ori_2007_metric_generator(dim: int, mu_val: float) -> MetricSpace:
         [1 - 2 * mu / r, 2, 0, 0],
         [2, 0, 0, 0],
         [0, 0, r ** 2, 0],
-        [0, 0, 0, r ** 2 * sp.sin(th)]
+        [0, 0, 0, (r * sp.sin(th)) **2]
     ])
     return MetricSpace(
         coordinates={2: (v, r), 3: (v, r, ph), 4: (v, r, th, ph)}[dim],
@@ -125,7 +125,7 @@ def morris_thorne_wormhole_generator(dim: int, b0_val: float) -> MetricSpace:
         [1, 0, 0, 0],
         [0, -1, 0, 0],
         [0, 0, -(b0 ** 2 + r ** 2), 0],
-        [0, 0, 0, -(b0 ** 2 + r ** 2) * sp.sin(th)]
+        [0, 0, 0, -(b0 ** 2 + r ** 2) * sp.sin(th)**2]
     ])
     return MetricSpace(
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],

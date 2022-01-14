@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import List, Iterable
+from typing import List, Iterable, Callable, Generic
 
 import numpy as np
 
@@ -35,3 +35,9 @@ def calc_orthogonal(inner, v: np.ndarray, d: np.ndarray) -> np.ndarray:
 
 def project(inner, onto_u, v):
     return inner(onto_u, v) / inner(onto_u, onto_u) * onto_u
+
+def compose(f1, f2):
+    return lambda x: f1(f2(x))
+
+def uncurry(f):
+    return lambda tup: f(*tup)

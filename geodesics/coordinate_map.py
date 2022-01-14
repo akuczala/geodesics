@@ -6,7 +6,6 @@ from sympy.matrices.common import NonInvertibleMatrixError, NonSquareMatrixError
 
 from geodesics.constants import SympyMatrix, SympySymbol, SympyArray
 from geodesics.tangent_vector import TangentVector
-from geodesics.utils import sympy_matrix_to_numpy
 
 
 class CoordinateMap:
@@ -15,7 +14,11 @@ class CoordinateMap:
         self.domain_coordinates = domain_coordinates
         self.image_coordinates = image_coordinates
         self.mapping = mapping
+        # todo njit these?
+        mapping_arr = sp.lambdify([self.domain_coordinates], sp.Matrix(self.mapping).T, 'numpy')
+        self.mapping_lambda = (lambda v: mapping_arr(v).reshape(-1))
         self.jacobian = self.calc_jacobian()
+        self.jacobian_lambda = sp.lambdify([self.domain_coordinates], self.jacobian, 'numpy')
         try:
             self.inverse_jacobian = self.jacobian.inv()
             self.inverse_jacobian = sp.simplify(self.inverse_jacobian)
@@ -26,19 +29,13 @@ class CoordinateMap:
             print(f'Warning: jacobian {self.jacobian} is non-invertible')
 
     def eval(self, domain_pos: np.ndarray) -> np.ndarray:
-        return np.array(self.mapping.subs(self.coords_to_subs(self.domain_coordinates, domain_pos)), dtype=float)
+        return self.mapping_lambda(domain_pos)
 
     def calc_jacobian(self) -> SympyMatrix:
         return sp.derive_by_array(self.mapping, self.domain_coordinates).tomatrix().T
 
     def tangent_map(self, tv: TangentVector) -> TangentVector:
-        u_image = np.dot(
-            sympy_matrix_to_numpy(
-                self.jacobian.subs(self.coords_to_subs(self.domain_coordinates, tv.x))
-            ),
-            tv.u
-        )
-        return TangentVector(u=u_image, x=self.eval(tv.x))
+        return TangentVector(u=np.dot(self.jacobian_lambda(tv.x), tv.u), x=tv.x)
 
     def tangent_inverse_map(self, domain_pos: np.ndarray, image_vec: np.ndarray) -> np.ndarray:
         return np.dot(self.inverse_jacobian_lambda(domain_pos), image_vec)
