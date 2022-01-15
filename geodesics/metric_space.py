@@ -2,9 +2,9 @@ from typing import Tuple, Dict, List, Optional
 
 import numpy as np
 import sympy as sp
+from numba import njit
 
 from geodesics.constants import SympySymbol, SympyArray, EPSILON, SympyMatrix
-from geodesics.coordinate_map import CoordinateMap
 from geodesics.tangent_vector import TangentVector, TangentVectorType
 from geodesics.utils import solve_real_quad, sympy_matrix_to_numpy, calc_orthogonal, gram_schmidt
 
@@ -19,7 +19,9 @@ class MetricSpace:
         self.christ = self.calc_christoffel()
 
         self.param_values = param_values
-
+        #d = self.dim
+        #g_lambda_flat = njit(sp.lambdify([self.coordinates], g.subs(self.param_values).reshape(d * d), 'numpy'))
+        #self.g_lambda = njit(lambda x: np.array(g_lambda_flat(x)).reshape(d,d))
         self.g_lambda = sp.lambdify([self.coordinates], sp.Matrix(g.subs(self.param_values)), 'numpy')
 
     @property

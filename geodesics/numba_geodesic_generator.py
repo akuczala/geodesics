@@ -4,7 +4,7 @@ from typing import Dict
 import numpy as np
 import sympy as sp
 from NumbaLSODA import lsoda_sig, lsoda
-from numba import jit, cfunc, carray
+from numba import cfunc, carray, njit
 
 from geodesics.constants import SympySymbol
 from geodesics.geodesic import Geodesic, y_to_u, x_u_to_y
@@ -29,16 +29,16 @@ class NumbaGeodesicGenerator:
             ),
             (1, 2)
         ))
-        Guu_arr = jit(nopython=True)(sp.lambdify([sp.Array(self.y)], sp.Matrix(self.Guu).T, 'numpy'))
-        self.Guu_np = jit(nopython=True)(lambda v: Guu_arr(v).reshape(-1))
-        self.ivp_fun = self.get_ivp_cfun(self.Guu_np)
+        Guu_arr = njit(sp.lambdify([sp.Array(self.y)], sp.Matrix(self.Guu).T, 'numpy'))
+        self.Guu_np = njit(lambda v: Guu_arr(v).reshape(-1))
+        self.ivp_fun = self.get_ivp_fun()
 
     @property
     def param_values(self) -> Dict[SympySymbol, float]:
         return self.metric_space.param_values
 
     def get_ivp_fun_scipy(self, Guu_np):
-        @jit(nopython=True)
+        @njit
         def ivp_fun(t, y):
             udot = -Guu_np(y)
             xdot = y_to_u(y)
@@ -46,17 +46,18 @@ class NumbaGeodesicGenerator:
 
         return ivp_fun
 
-    def get_ivp_fun(self, Guu_np):
-        @jit(nopython=True)
-        def ivp_fun(t, y):
-            udot = -Guu_np(y)
-            xdot = y[len(y) // 2:]
-            return np.concatenate((xdot, udot))
+    # def get_ivp_fun(self, Guu_np):
+    #     @njit
+    #     def ivp_fun(t, y):
+    #         udot = -Guu_np(y)
+    #         xdot = y[len(y) // 2:]
+    #         return np.concatenate((xdot, udot))
+    #
+    #     return ivp_fun
 
-        return ivp_fun
-
-    def get_ivp_cfun(self, Guu_np):
+    def get_ivp_fun(self):
         ylen = self.metric_space.dim * 2
+        Guu_np = self.Guu_np
 
         @cfunc(lsoda_sig)
         def ivp_fun(t, y, dy, p):
@@ -69,7 +70,7 @@ class NumbaGeodesicGenerator:
 
         return ivp_fun
 
-    def calc_geodesic(self, tv0: TangentVector, t_range) -> Geodesic:
+    def calc_geodesic(self, tv0: TangentVector, t_range: np.ndarray) -> Geodesic:
         ysol, success = lsoda(self.ivp_fun.address, np.concatenate((tv0.x, tv0.u)), t_range)
         return Geodesic(SodaSolution(y=ysol.T, t=t_range))
 
