@@ -58,9 +58,8 @@ print('calculating connections')
 gg = NumbaGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 metric.eval_g(np.array([1.0, 2.0, 3.0, 4.0]))
 
-# cube_im = plt.imread('test-equirectangular.png')[:, :, :3]  # rm alpha
-cube_im = plt.imread('/Users/kook/Pictures/rheingauer.jpeg')[:, :, :3]
-church_im = plt.imread('/Users/kook/Pictures/aquaduct.png')[:, :, :3]
+cube_im = plt.imread('test-equirectangular.png')[:, :, :3]  # rm alpha
+church_im = plt.imread('test-2.png')[:, :, :3]  # rm alpha
 cube_im = cube_im / np.max(cube_im)
 church_im = church_im / np.max(church_im)
 
@@ -78,10 +77,10 @@ def calc_xu_array():
     )(th_grid, ph_grid)
 
 
-# t0 = time.time()
-# pos_array, u_array = calc_xu_array()
-# print(time.time() - t0)
-cProfile.run("pos_array, u_array = calc_xu_array()", sort=SortKey.CUMULATIVE, filename='raytace-stats')
+t0 = time.time()
+pos_array, u_array = calc_xu_array()
+print(time.time() - t0)
+#cProfile.run("pos_array, u_array = calc_xu_array()", sort=SortKey.CUMULATIVE, filename='raytace-stats')
 
 # plt.pcolor(th_grid, ph_grid, pos_array[:, :, 1])
 # plt.colorbar()
@@ -93,6 +92,7 @@ im = np.vectorize(
     lambda x, u: pos_to_pixel(to_pix1, to_pix2, x, u),
     signature='(d),(d)->(c)')(pos_array, u_array)
 print(time.time() - t0)
-
-plt.imshow(im)
-plt.show()
+plt.imsave('out.png', im)
+#plt.imshow(im)
+#plt.show()
+print('done')
