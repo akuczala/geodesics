@@ -1,39 +1,20 @@
-from typing import Dict
-
 import numpy as np
 import sympy as sp
 from scipy.integrate import solve_ivp
 
-from geodesics.constants import SympySymbol
 from geodesics.geodesic import Geodesic, y_to_u, x_u_to_y
-from geodesics.geodesic_generator import TerminationCondition
+from geodesics.geodesic_generator import TerminationCondition, GeodesicGenerator
 from geodesics.metric_space import MetricSpace
 from geodesics.tangent_vector import TangentVector
 
 
-class ScipyGeodesicGenerator:
+class ScipyGeodesicGenerator(GeodesicGenerator):
     def __init__(self, metric_space: MetricSpace, termination_condition=TerminationCondition.none(), simplify_fn=lambda x: x):
-        self.metric_space = metric_space
-        u = sp.IndexedBase('u')
-        uvec = sp.Array([u[i] for i in range(len(metric_space.coordinates))])
-        self.y = metric_space.coordinates + tuple(uvec.tolist())
-        self.termination_condition = termination_condition
-        # ^i_jk u^m u^n
-        # ^i_k u^n
-        self.Guu = simplify_fn(sp.tensorcontraction(
-            sp.tensorcontraction(
-                sp.tensorproduct(metric_space.christ, uvec, uvec), (1, 3)
-            ),
-            (1, 2)
-        ))
+        super().__init__(metric_space, termination_condition, simplify_fn)
         Guu_list = sp.lambdify(self.y + metric_space.params, self.Guu, 'numpy')
         self.Guu_np = lambda *args: np.array(Guu_list(*args))
         self.ivp_fun = self.get_ivp_fun()
         self.jac_fun = self.get_jac_fun(simplify_fn)
-
-    @property
-    def param_values(self) -> Dict[SympySymbol, float]:
-        return self.metric_space.param_values
 
     def get_ivp_fun(self):
         def ivp_fun(t, y, *params):
