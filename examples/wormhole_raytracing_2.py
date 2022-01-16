@@ -58,8 +58,8 @@ print('calculating connections')
 gg = NumbaGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 metric.eval_g(np.array([1.0, 2.0, 3.0, 4.0]))
 
-cube_im = plt.imread('rheingauer.png')[:, :, :3]  # rm alpha
-church_im = plt.imread('aquaduct.jpeg')[:, :, :3]  # rm alpha
+cube_im = plt.imread('rheingauer.jpeg')[:, :, :3]  # rm alpha
+church_im = plt.imread('aquaduct.png')[:, :, :3]  # rm alpha
 cube_im = cube_im / np.max(cube_im)
 church_im = church_im / np.max(church_im)
 
