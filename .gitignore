@@ -4,3 +4,4 @@
 poetry.lock
 **/*.blend1
 **/*.pkl
+deploy/*
