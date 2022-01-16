@@ -1,15 +1,10 @@
-import cProfile
-import itertools
-import pstats
 import time
-from pstats import SortKey
 from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from geodesics.coordinate_map_library import SPHERICAL_MAPPING, INVERSE_SPHERICAL_MAPPING
-from geodesics.geodesic_generator import TerminationCondition
 from geodesics.metric_library import morris_thorne_wormhole_generator
 from geodesics.numba_geodesic_generator import NumbaGeodesicGenerator
 from geodesics.sphere_projection import perspective_to_sphere, sphere_to_equirect_pixel
@@ -27,10 +22,12 @@ def make_null_geo_args(timelike_tv: TangentVector) -> np.ndarray:
 
 
 def get_ray_final(x0: np.ndarray, th: float, ph: float) -> Tuple[np.ndarray, np.ndarray]:
-    direction = SPHERICAL_MAPPING.tangent_inverse_map(
-        domain_pos=x0[1:],
-        image_vec=np.array([np.cos(ph) * np.sin(th), np.sin(ph) * np.sin(th), np.cos(th)], dtype=float)
-    )
+    rho = np.sqrt(b0_val**2 + x0[1]**2)
+    direction = np.array([
+        np.cos(ph) * np.sin(th),
+        -np.cos(th) / rho,
+        np.sin(ph) * np.sin(th) /(rho * np.abs(np.sin(x0[2])))
+    ])
     u0 = np.array([1.0, 0.1 * direction[0], 0.1 * direction[1], 0.1 * direction[2]], dtype=float)
     tv0 = TangentVector(x=x0, u=u0)
     tv0.u = make_null_geo_args(tv0)
@@ -51,11 +48,12 @@ def pos_to_pixel(to_pixel_pos, to_pixel_neg, pos, u):
 
 
 print('generating metric')
-metric = morris_thorne_wormhole_generator(4, b0_val=3.0)
+b0_val = 3.0
+metric = morris_thorne_wormhole_generator(4, b0_val=b0_val)
 # metric = sc_metric_generator(4, 1.0)
 # metric = flat_polar(4)
 print('calculating connections')
-gg = NumbaGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
+gg = NumbaGeodesicGenerator(metric)
 metric.eval_g(np.array([1.0, 2.0, 3.0, 4.0]))
 
 cube_im = plt.imread('rheingauer.jpeg')[:, :, :3]  # rm alpha
@@ -77,7 +75,8 @@ def calc_xu_array(r0):
     )(th_grid, ph_grid)
 
 
-r0_range = np.linspace(0.001, 4, 90)[::-1]
+r0_range = np.linspace(0.0, 4, 90)[::-1]
+#r0_range = [0]
 for i, r0 in enumerate(r0_range):
     t0 = time.time()
     pos_array, u_array = calc_xu_array(r0)

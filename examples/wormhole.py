@@ -3,12 +3,14 @@ import pickle
 
 import numpy as np
 import sympy as sp
+from matplotlib import pyplot as plt
 
 from blenderhelper.draw_data import DrawDataList, CurveData
 from geodesics.coordinate_map import CoordinateMap
-from geodesics.geodesic_generator import TerminationCondition, GeodesicGenerator
+from geodesics.geodesic_generator import TerminationCondition
 from geodesics.metric_library import morris_thorne_wormhole_generator
 from geodesics.metric_space import MetricSpace
+from geodesics.scipy_geodesic_generator import ScipyGeodesicGenerator
 from geodesics.tangent_vector import TangentVector, TangentVectorType
 
 
@@ -29,7 +31,7 @@ def get_coordinate_mapping(metric: MetricSpace):
 print('generating metric')
 metric = morris_thorne_wormhole_generator(3, b0_val=3.0)
 print('calculating connections')
-gg = GeodesicGenerator(metric, termination_condition=TerminationCondition.none())
+gg = ScipyGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 coordinate_mapping = get_coordinate_mapping(metric)
 
 draw_data = DrawDataList.new()
@@ -47,12 +49,19 @@ def make_timelike_geo_args(timelike_tv):
     assert metric.classify_tangent_vector(timelike_tv) == TangentVectorType.TIMELIKE
     return timelike_tv, np.linspace(0, 200, 50)
 
-
-for r0, ph0 in itertools.product([4], np.linspace(0, 2 * np.pi, 20)):
+# ph0_range = np.linspace(0, 2 * np.pi, 20 )
+ph0_range = [0]
+for r0, ph0 in itertools.product([4], ph0_range):
     x0 = np.array([0, r0, ph0], dtype=float)
-    u0 = np.array([1.0, -0.08, 0.0117], dtype=float)
+    u0 = np.array([1.0, -0.01, 0.0], dtype=float)
     print('calculating geodesic')
-    geo = gg.calc_geodesic(*make_timelike_geo_args(TangentVector(x=x0, u=u0)))
+    #geo = gg.calc_geodesic(*make_timelike_geo_args(TangentVector(x=x0, u=u0)))
+    geo = gg.calc_geodesic(TangentVector(x=x0, u=u0), np.linspace(0,1000,50))
+    fig, axes = plt.subplots(1,2)
+    axes[0].plot(geo.x[:,1])
+    axes[1].plot(geo.x[:, 2])
+    #axes[2].plot(geo.x[:, 3])
+    plt.show()
     draw_data.append(CurveData([coordinate_mapping.eval(x) for x in geo.x]))
 
 with open('wormhole.pkl', 'wb') as f:

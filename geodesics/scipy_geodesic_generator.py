@@ -13,14 +13,28 @@ class ScipyGeodesicGenerator(GeodesicGenerator):
         super().__init__(metric_space, termination_condition, simplify_fn)
         Guu_list = sp.lambdify(self.y + metric_space.params, self.Guu, 'numpy')
         self.Guu_np = lambda *args: np.array(Guu_list(*args))
+        Guv_list = sp.lambdify(self.y_pt + metric_space.params, self.Guv, 'numpy')
+        self.Guv_np = lambda *args: np.array(Guv_list(*args))
         self.ivp_fun = self.get_ivp_fun()
         self.jac_fun = self.get_jac_fun(simplify_fn)
+
+        self.pt_ivp_fun = self.get_pt_ivp_fun()
 
     def get_ivp_fun(self):
         def ivp_fun(t, y, *params):
             udot = -self.Guu_np(*y, *params)
             xdot = y_to_u(y)
             return x_u_to_y(xdot, udot)
+
+        return ivp_fun
+
+    def get_pt_ivp_fun(self):
+        def ivp_fun(t, y_pt, *params):
+            y = y_pt[:2*len(y_pt)//3]
+            udot = -self.Guu_np(*y, *params)
+            vdot = -self.Guv_np(*y_pt, *params)
+            xdot = y_to_u(y)
+            return np.concatenate((x_u_to_y(xdot, udot), vdot))
 
         return ivp_fun
 
@@ -45,6 +59,19 @@ class ScipyGeodesicGenerator(GeodesicGenerator):
             self.ivp_fun, (t_range[0], t_range[-1]),
             t_eval=t_range,
             y0=np.concatenate((tv0.x, tv0.u)),
+            args=tuple(self.metric_space.param_values[symbol] for symbol in self.metric_space.params),
+            events=self.termination_condition.condition,
+            **ivp_kwargs
+        ))
+
+    def calc_parallel_transport(self, tv0: TangentVector, v0: np.ndarray, t_range, use_jac=False, **kwargs) -> Geodesic:
+        ivp_kwargs = {'dense_output': True}
+        ivp_kwargs.update(kwargs)
+        ivp_kwargs.update({'jac': self.jac_fun} if use_jac else {})
+        return Geodesic(solve_ivp(
+            self.pt_ivp_fun, (t_range[0], t_range[-1]),
+            t_eval=t_range,
+            y0=np.concatenate((tv0.x, tv0.u, v0)),
             args=tuple(self.metric_space.param_values[symbol] for symbol in self.metric_space.params),
             events=self.termination_condition.condition,
             **ivp_kwargs

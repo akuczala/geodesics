@@ -12,6 +12,7 @@ from geodesics.geodesic import Geodesic
 from geodesics.geodesic_generator import TerminationCondition, GeodesicGenerator
 from geodesics.metric_library import morris_thorne_wormhole_generator, flat_polar
 from geodesics.metric_space import MetricSpace
+from geodesics.scipy_geodesic_generator import ScipyGeodesicGenerator
 from geodesics.sphere_projection import perspective_to_sphere
 from geodesics.tangent_vector import TangentVector, TangentVectorType
 
@@ -30,9 +31,9 @@ def get_coordinate_mapping(metric: MetricSpace):
 
 
 print('generating metric')
-metric = flat_polar(4)
+metric = morris_thorne_wormhole_generator(4, 3.0)
 print('calculating connections')
-gg = GeodesicGenerator(metric, termination_condition=TerminationCondition.none())
+gg = ScipyGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 coordinate_mapping = get_coordinate_mapping(metric)
 
 draw_data = DrawDataList.new()
@@ -67,5 +68,5 @@ for ph, th in zip(ph_grid.ravel(),th_grid.ravel()):
     geo = get_geo_final(r0, th ,ph)
     draw_data.append(CurveData([coordinate_mapping.eval(x) for x in geo.x]))
 
-with open('flat_raytracing.pkl', 'wb') as f:
+with open('test_raytracing.pkl', 'wb') as f:
     pickle.dump(draw_data, f)

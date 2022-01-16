@@ -3,11 +3,11 @@ import pickle
 
 import numpy as np
 import sympy as sp
+from matplotlib import pyplot as plt
 
 from blenderhelper.draw_data import DrawDataList, CurveData
 from geodesics.coordinate_map import CoordinateMap
-from geodesics.coordinate_map_library import POLAR_MAPPING
-from geodesics.geodesic_generator import TerminationCondition, GeodesicGenerator
+from geodesics.geodesic_generator import TerminationCondition
 from geodesics.metric_library import morris_thorne_wormhole_generator
 from geodesics.metric_space import MetricSpace
 from geodesics.scipy_geodesic_generator import ScipyGeodesicGenerator
@@ -29,7 +29,7 @@ def get_coordinate_mapping(metric: MetricSpace):
 
 
 print('generating metric')
-metric = morris_thorne_wormhole_generator(3, b0_val=3.0)
+metric = morris_thorne_wormhole_generator(4, b0_val=3.0)
 print('calculating connections')
 gg = ScipyGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 coordinate_mapping = get_coordinate_mapping(metric)
@@ -42,22 +42,29 @@ def make_null_geo_args(timelike_tv):
     tv = timelike_tv
     u0 = metric.calc_null_tangent(np.array([tv.u[0], 0, 0]), np.array([0, tv.u[1], tv.u[2]]), tv.x)
     null_tv = TangentVector(x=tv.x, u=u0)
-    return null_tv, np.linspace(0, 40, 100)
+    return null_tv, np.linspace(0, 20, 50)
 
 
-th0 = np.pi
-dth = np.pi * 0.05
+def make_timelike_geo_args(timelike_tv):
+    assert metric.classify_tangent_vector(timelike_tv) == TangentVectorType.TIMELIKE
+    return timelike_tv, np.linspace(0, 200, 50)
 
-for r0, ph in itertools.product([0.1], np.linspace(th0 - dth, th0 + dth, 30)):
-    x0 = np.array([0, r0, 0], dtype=float)
-    rho = sp.sqrt(r0**2 + metric.param_values[sp.symbols('b0')]**2)
-    #rho = r0
-    direction = np.array([np.cos(ph), np.sin(ph) / rho])
-    u0 = np.array([2.0, 0.1 * direction[0], 0.1 * direction[1]])
+# ph0_range = np.linspace(0, 2 * np.pi, 20 )
+ph0_range = [0]
+for r0, ph0 in itertools.product([4], ph0_range):
+    x0 = np.array([0, r0, np.pi/2, ph0], dtype=float)
+    u0 = np.array([1.0, -0.01, 0.0, 0.0], dtype=float)
+    v0 = np.array([0.0, 0.0, 1.0, 0.0])
     print('calculating geodesic')
-    #geo = gg.calc_geodesic(*make_null_geo_args(TangentVector(x=x0, u=u0)))
-    geo = gg.calc_geodesic(TangentVector(x0,u0), np.linspace(0,100,50))
+    #geo = gg.calc_geodesic(*make_timelike_geo_args(TangentVector(x=x0, u=u0)))
+    geo = gg.calc_parallel_transport(TangentVector(x=x0, u=u0), v0, np.linspace(0,1000,50))
+    y = geo.sol.y.T
+    fig, axes = plt.subplots(4,3,figsize=(10,10))
+    for i in range(3):
+        for j in range(4):
+            axes[j,i].plot(y[:,4*i + j])
+    plt.show()
     draw_data.append(CurveData([coordinate_mapping.eval(x) for x in geo.x]))
 
-with open('wormhole_raytracing.pkl', 'wb') as f:
+with open('wormhole.pkl', 'wb') as f:
     pickle.dump(draw_data, f)

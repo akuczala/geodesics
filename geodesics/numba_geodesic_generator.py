@@ -15,7 +15,7 @@ class NumbaGeodesicGenerator(GeodesicGenerator):
     def __init__(self, metric_space: MetricSpace,
                  simplify_fn=lambda x: x):
         super().__init__(metric_space, TerminationCondition.none(), simplify_fn)
-        Guu_arr = njit(sp.lambdify([sp.Array(self.y)], sp.Matrix(self.Guu).T, 'numpy'))
+        Guu_arr = njit(sp.lambdify([sp.Array(self.y)], sp.Matrix(self.Guu.subs(metric_space.param_values)).T, 'numpy'))
         self.Guu_np = njit(lambda v: Guu_arr(v).reshape(-1))
         self.ivp_fun = self.get_ivp_fun()
 
