@@ -23,7 +23,7 @@ def make_null_geo_args(timelike_tv: TangentVector) -> np.ndarray:
     tv = timelike_tv
     return metric.calc_null_tangent_fast(
         np.array([tv.u[0], 0, 0, 0], dtype=float),
-        np.array([0, tv.u[1], tv.u[2], tv.u[3]], dtype=float), tv.x, check=True)
+        np.array([0, tv.u[1], tv.u[2], tv.u[3]], dtype=float), tv.x, check=False)
 
 
 def get_ray_final(x0: np.ndarray, th: float, ph: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -63,7 +63,7 @@ church_im = plt.imread('aquaduct.png')[:, :, :3]  # rm alpha
 cube_im = cube_im / np.max(cube_im)
 church_im = church_im / np.max(church_im)
 
-x_grid, y_grid = np.meshgrid(np.linspace(-1, 1, 80), np.linspace(-1, 1, 80))
+x_grid, y_grid = np.meshgrid(np.linspace(-1, 1, 320), np.linspace(-1, 1, 320))
 ph_grid, lat_grid = np.vectorize(perspective_to_sphere, signature='(),()->(),()')(x_grid, y_grid)
 ph_grid = ph_grid + np.pi
 th_grid = np.pi / 2 + lat_grid
@@ -77,7 +77,7 @@ def calc_xu_array(r0):
     )(th_grid, ph_grid)
 
 
-r0_range = np.linspace(0.001, 4, 5)[::-1]
+r0_range = np.linspace(0.001, 4, 90)[::-1]
 for i, r0 in enumerate(r0_range):
     t0 = time.time()
     pos_array, u_array = calc_xu_array(r0)
