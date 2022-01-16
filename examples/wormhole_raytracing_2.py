@@ -63,7 +63,7 @@ church_im = plt.imread('aquaduct.png')[:, :, :3]  # rm alpha
 cube_im = cube_im / np.max(cube_im)
 church_im = church_im / np.max(church_im)
 
-x_grid, y_grid = np.meshgrid(np.linspace(-1, 1, 80), np.linspace(-1, 1, 80))
+x_grid, y_grid = np.meshgrid(np.linspace(-1, 1, 160), np.linspace(-1, 1, 160))
 ph_grid, lat_grid = np.vectorize(perspective_to_sphere, signature='(),()->(),()')(x_grid, y_grid)
 ph_grid = ph_grid + np.pi
 th_grid = np.pi / 2 + lat_grid
