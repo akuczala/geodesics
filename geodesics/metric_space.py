@@ -1,8 +1,7 @@
-from typing import Tuple, Dict, List, Optional
+from typing import Tuple, Dict, List
 
 import numpy as np
 import sympy as sp
-from numba import njit
 
 from geodesics.constants import SympySymbol, SympyArray, EPSILON, SympyMatrix
 from geodesics.tangent_vector import TangentVector, TangentVectorType
