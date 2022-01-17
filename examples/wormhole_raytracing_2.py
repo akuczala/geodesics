@@ -17,6 +17,7 @@ TAU_RANGE = np.linspace(0, 80, 100)
 
 START_ANI = int(os.environ['START_ANI'])
 END_ANI = int(os.environ['END_ANI'])
+N_FRAMES = int(os.environ['N_FRAMES'])
 RESOLUTION = int(os.environ['RESOLUTION'])
 
 # todo make faster: null geodesic takes ~ 1/3 times runtime of calc_geodesic
@@ -113,7 +114,7 @@ camera_tv0 = TangentVector(
     x=np.array([0, 4.0, np.pi / 2, 0]),
     u=np.array([1.0, -0.01, 0.0, 0.00152])
 )
-CAMERA_TAU_RANGE = np.linspace(0, 1900, 4)
+CAMERA_TAU_RANGE = np.linspace(0, 1900, N_FRAMES)
 frame_geos = get_frames(camera_tv0, get_frame0(camera_tv0.x), CAMERA_TAU_RANGE)
 
 
