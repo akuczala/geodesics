@@ -129,7 +129,7 @@ for i in list(range(len(frame_geos[0].tau)))[START_ANI : END_ANI]:
         th_grid=th_grid,
         ph_grid=ph_grid
     )
-    # plt.imsave(f'out/out_{i:03d}.png', im)
-    plt.imshow(im)
-    plt.show()
+    plt.imsave(f'out/out_{i:03d}.png', im)
+    #plt.imshow(im)
+    #plt.show()
 print('done')
