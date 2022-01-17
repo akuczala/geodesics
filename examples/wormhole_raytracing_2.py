@@ -20,6 +20,7 @@ END_ANI = int(os.environ['END_ANI'])
 N_FRAMES = int(os.environ['N_FRAMES'])
 RESOLUTION = int(os.environ['RESOLUTION'])
 
+
 # todo make faster: null geodesic takes ~ 1/3 times runtime of calc_geodesic
 def make_null_geo_args(timelike_tv: TangentVector) -> np.ndarray:
     tv = timelike_tv
@@ -117,11 +118,10 @@ camera_tv0 = TangentVector(
 CAMERA_TAU_RANGE = np.linspace(0, 1900, N_FRAMES)
 frame_geos = get_frames(camera_tv0, get_frame0(camera_tv0.x), CAMERA_TAU_RANGE)
 
-
 to_pix1 = sphere_to_equirect_pixel(cube_im)
 to_pix2 = sphere_to_equirect_pixel(church_im)
 
-for i in list(range(len(frame_geos[0].tau)))[START_ANI : END_ANI]:
+for i in list(range(len(frame_geos[0].tau)))[START_ANI: END_ANI]:
     im = render_frame(
         pos_to_pixel=lambda x, u: pos_to_pixel(to_pix1, to_pix2, x, u),
         x0=frame_geos[0].x[i],
@@ -130,6 +130,6 @@ for i in list(range(len(frame_geos[0].tau)))[START_ANI : END_ANI]:
         ph_grid=ph_grid
     )
     plt.imsave(f'out/out_{i:03d}.png', im)
-    #plt.imshow(im)
-    #plt.show()
+    # plt.imshow(im)
+    # plt.show()
 print('done')
