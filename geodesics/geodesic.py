@@ -1,47 +1,28 @@
+from abc import abstractmethod
 from typing import List
 
-import numpy as np
 from numpy import ndarray
 
 from geodesics.tangent_vector import TangentVector
 
 
-def y_to_x(y: np.ndarray) -> ndarray:
-    return y[:len(y) // 2]
-
-
-def y_to_u(y: np.ndarray) -> np.ndarray:
-    return y[len(y) // 2:]
-
-
-def x_u_to_y(x: np.ndarray, u: np.ndarray) -> np.ndarray:
-    return np.concatenate((x, u))
-
-
-def tv_to_y(tv: TangentVector):
-    return x_u_to_y(tv.x, tv.u)
-
-
 class Geodesic:
-    def __init__(self, sol):
-        self.sol = sol
 
     @property
-    def dim(self) -> int:
-        return self.sol.y.shape[0]
-
-    @property
+    @abstractmethod
     def x(self) -> ndarray:
-        return y_to_x(self.sol.y).T
+        pass
 
     @property
+    @abstractmethod
     def u(self) -> ndarray:
-        return y_to_u(self.sol.y).T
+        pass
 
     @property
     def tv(self) -> List[TangentVector]:
         return [TangentVector(x=x, u=u) for x, u in zip(self.x, self.u)]
 
     @property
+    @abstractmethod
     def tau(self) -> ndarray:
-        return self.sol.t
+        pass

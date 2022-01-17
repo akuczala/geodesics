@@ -53,10 +53,10 @@ def make_timelike_geo_args(timelike_tv):
 ph0_range = [0]
 for r0, ph0 in itertools.product([4], ph0_range):
     x0 = np.array([0, r0, ph0], dtype=float)
-    u0 = np.array([1.0, -0.01, 0.0], dtype=float)
+    u0 = np.array([1.0, -0.01, 0.00152], dtype=float)
     print('calculating geodesic')
     #geo = gg.calc_geodesic(*make_timelike_geo_args(TangentVector(x=x0, u=u0)))
-    geo = gg.calc_geodesic(TangentVector(x=x0, u=u0), np.linspace(0,1000,50))
+    geo = gg.calc_geodesic(TangentVector(x=x0, u=u0), np.linspace(0,1600,50))
     fig, axes = plt.subplots(1,2)
     axes[0].plot(geo.x[:,1])
     axes[1].plot(geo.x[:, 2])
