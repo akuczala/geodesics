@@ -21,6 +21,10 @@ N_FRAMES = int(os.environ['N_FRAMES'])
 RESOLUTION = int(os.environ['RESOLUTION'])
 #OUT_PATH = os.environ['OUT_PATH']
 
+# START_ANI = 0
+# END_ANI = 6
+# N_FRAMES = 6
+# RESOLUTION = 80
 
 # todo make faster: null geodesic takes ~ 1/3 times runtime of calc_geodesic
 def make_null_geo_args(timelike_tv: TangentVector) -> np.ndarray:
@@ -52,7 +56,7 @@ def pos_to_pixel(to_pixel_pos, to_pixel_neg, pos, u):
     cartesian_u = bispherical_mapping.tangent_map(TangentVector(x=pos[1:], u=u[1:])).u
     th, ph = INVERSE_SPHERICAL_MAPPING.eval(cartesian_u)[1:]
     th = th - np.pi / 2
-    if pos[1] > 0:
+    if np.sin(pos[1]) > 0:
         return to_pixel_pos(ph, th)
     else:
         return to_pixel_neg(ph, -th)
@@ -121,10 +125,10 @@ ph_grid = ph_grid + np.pi
 th_grid = np.pi / 2 + lat_grid
 
 camera_tv0 = TangentVector(
-    x=np.array([0, np.pi*0.4, np.pi*1.01, 0]),
-    u=np.array([1.0, 0.005, 0.0, 0.0])
+    x=np.array([0, np.pi*0.4, np.pi*1.002, 0]),
+    u=np.array([1.0, -0.005, 0.0, 0.0])
 )
-CAMERA_TAU_RANGE = np.linspace(0,2000,N_FRAMES)
+CAMERA_TAU_RANGE = np.linspace(0,1100,N_FRAMES)
 
 frame_geos = get_frames(camera_tv0, get_frame0(camera_tv0.x), CAMERA_TAU_RANGE)
 to_pix1 = sphere_to_equirect_pixel(cube_im)

@@ -31,7 +31,7 @@ def get_coordinate_mapping(metric: MetricSpace):
 
 
 print('generating metric')
-metric = double_wormhole_generator(3, a_val=3.0, beta_val=2)
+metric = double_wormhole_generator(3, a_val=2.0, beta_val=2)
 print('calculating connections')
 gg = ScipyGeodesicGenerator(metric, termination_condition=TerminationCondition.none())
 print('calculating coordinate mapping')
@@ -57,14 +57,14 @@ print('calculating geodesics')
 ps_range = [0.4*np.pi]
 #s_range = np.pi*(1+np.linspace(-0.05,0.05,40))
 #s_range = np.pi + np.array([-1,0,1])*np.pi*0.025
-s_range = [np.pi*1.01]
+s_range = [np.pi*(1+0.002)]
 fig, axes = plt.subplots(1,2)
 for ps, s in itertools.product(ps_range, s_range):
     x0 = np.array([0, ps, s], dtype=float)
     u0 = np.array([1.0, -0.005, 0.00], dtype=float)
     print('calculating geodesic')
     #geo = gg.calc_geodesic(*make_timelike_geo_args(TangentVector(x=x0, u=u0)))
-    geo = gg.calc_geodesic(TangentVector(x=x0, u=u0), np.linspace(0,2000,50))
+    geo = gg.calc_geodesic(TangentVector(x=x0, u=u0), np.linspace(0,1000,50))
     axes[0].plot(geo.x[:,1])
     axes[1].plot(geo.x[:, 2])
     #axes[2].plot(geo.x[:, 3])
