@@ -24,7 +24,7 @@ def flat_polar(dim: int) -> MetricSpace:
         [1, 0, 0, 0],
         [0, -1, 0, 0],
         [0, 0, -r ** 2, 0],
-        [0, 0, 0, -(r * sp.sin(th)) **2]
+        [0, 0, 0, -(r * sp.sin(th)) ** 2]
     ])
     return MetricSpace(
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
@@ -40,7 +40,7 @@ def sc_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         [(1 - rs / r), 0, 0, 0],
         [0, -(1 - rs / r) ** (-1), 0, 0],
         [0, 0, -r ** 2, 0],
-        [0, 0, 0, -(r * sp.sin(th)) **2]
+        [0, 0, 0, -(r * sp.sin(th)) ** 2]
     ])
 
     return MetricSpace(
@@ -57,7 +57,7 @@ def zee_metric_generator(dim: int, rs_val: float) -> MetricSpace:
         [(rs - r) / r, 2 * rs / r, 0, 0],
         [2 * rs / r, (r + rs) / r, 0, 0],
         [0, 0, r ** 2, 0],
-        [0, 0, 0, (r * sp.sin(th)) **2]
+        [0, 0, 0, (r * sp.sin(th)) ** 2]
     ])
     return MetricSpace(
         coordinates={2: (tb, r), 3: (tb, r, ph), 4: (tb, r, th, ph)}[dim],
@@ -73,7 +73,7 @@ def ori_2007_metric_generator(dim: int, mu_val: float) -> MetricSpace:
         [1 - 2 * mu / r, 2, 0, 0],
         [2, 0, 0, 0],
         [0, 0, r ** 2, 0],
-        [0, 0, 0, (r * sp.sin(th)) **2]
+        [0, 0, 0, (r * sp.sin(th)) ** 2]
     ])
     return MetricSpace(
         coordinates={2: (v, r), 3: (v, r, ph), 4: (v, r, th, ph)}[dim],
@@ -125,11 +125,30 @@ def morris_thorne_wormhole_generator(dim: int, b0_val: float) -> MetricSpace:
         [1, 0, 0, 0],
         [0, -1, 0, 0],
         [0, 0, -(b0 ** 2 + r ** 2), 0],
-        [0, 0, 0, -(b0 ** 2 + r ** 2) * sp.sin(th)**2]
+        [0, 0, 0, -(b0 ** 2 + r ** 2) * sp.sin(th) ** 2]
     ])
     return MetricSpace(
         coordinates={2: (t, r), 3: (t, r, ph), 4: (t, r, th, ph)}[dim],
         params=(b0,),
         g=g[:dim, :dim],
         param_values={b0: b0_val}
+    )
+
+
+def double_wormhole_generator(dim: int, a_val: float, beta_val: float) -> MetricSpace:
+    assert dim > 2
+    t, s, ps, ph, a, beta = sp.symbols('t s ps ph a beta')
+    tau = -beta * sp.cos(ps)
+    b = a / (sp.cosh(tau) - sp.cos(s))
+    g = sp.Array([
+        [1, 0, 0, 0],
+        [0, -(b * beta * sp.sin(ps)) ** 2 - sp.cos(ps)**2, 0, 0],
+        [0, 0, -b ** 2, 0],
+        [0, 0, 0, -(b * sp.sin(s)) ** 2]
+    ])
+    return MetricSpace(
+        coordinates={3: (t, ps, s), 4: (t, ps, s, ph)}[dim],
+        params=(a, beta),
+        g=g[:dim, :dim],
+        param_values={a: a_val, beta: beta_val}
     )

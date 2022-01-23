@@ -12,8 +12,8 @@ from geodesics.tangent_vector import TangentVector
 class GeodesicGenerator(ABC):
     def __init__(self, metric_space: MetricSpace, simplify_fn=lambda x: x):
         self.metric_space = metric_space
-        u = sp.IndexedBase('u')
-        v = sp.IndexedBase('v')
+        u = sp.IndexedBase('u', shape=(metric_space.dim,))
+        v = sp.IndexedBase('v', shape=(metric_space.dim,))
         uvec = sp.Array([u[i] for i in range(len(metric_space.coordinates))])
         vvec = sp.Array([v[i] for i in range(len(metric_space.coordinates))])
         self.y = metric_space.coordinates + tuple(uvec.tolist())

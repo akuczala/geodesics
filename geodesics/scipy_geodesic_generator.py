@@ -109,7 +109,7 @@ class ScipyGeodesicGenerator(GeodesicGenerator):
         ivp_kwargs.update(kwargs)
         ivp_kwargs.update({'jac': self.jac_fun} if use_jac else {})
         sol = solve_ivp(
-            self.pt_ivp_fun, (t_range[0], t_range[-1]),
+            self.ivp_fun, (t_range[0], t_range[-1]),
             t_eval=t_range,
             y0=np.concatenate((tv0.x, tv0.u)),
             args=tuple(self.metric_space.param_values[symbol] for symbol in self.metric_space.params),
@@ -118,7 +118,7 @@ class ScipyGeodesicGenerator(GeodesicGenerator):
         )
         return NumpyGeodesic(x=y_to_x(sol.y).T, u=y_to_u(sol.y).T, tau_range=sol.t)
 
-    def calc_parallel_transport(self, tv0: TangentVector, v0: np.ndarray, t_range, use_jac=False,
+    def calc_parallel_transport(self, tv0: TangentVector, v0: np.ndarray, t_range, use_jac=False, raise_on_fail=False,
                                 **kwargs) -> NumpyGeodesicTransport:
         ivp_kwargs = {'dense_output': True}
         ivp_kwargs.update(kwargs)
@@ -131,6 +131,8 @@ class ScipyGeodesicGenerator(GeodesicGenerator):
             events=self.termination_condition.condition,
             **ivp_kwargs
         )
+        if raise_on_fail and not sol.success:
+            raise Exception(f'Solver failed to find solution: {sol.message}')
         geo_y = sol.y[:2 * len(sol.y) // 3]
         v = sol.y[2 * len(sol.y) // 3:]
         return NumpyGeodesicTransport(x=y_to_x(geo_y).T, u=y_to_u(geo_y).T, tau_range=sol.t, v=v.T)

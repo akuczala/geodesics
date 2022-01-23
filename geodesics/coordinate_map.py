@@ -10,23 +10,26 @@ from geodesics.tangent_vector import TangentVector
 
 class CoordinateMap:
     def __init__(self, domain_coordinates: List[SympySymbol], image_coordinates: List[SympySymbol],
-                 mapping: SympyArray):
+                 mapping: SympyArray, calc_jac=True, calc_inverse=True):
         self.domain_coordinates = domain_coordinates
         self.image_coordinates = image_coordinates
         self.mapping = mapping
         # todo njit these?
         mapping_arr = sp.lambdify([self.domain_coordinates], sp.Matrix(self.mapping).T, 'numpy')
         self.mapping_lambda = (lambda v: mapping_arr(v).reshape(-1))
-        self.jacobian = self.calc_jacobian()
-        self.jacobian_lambda = sp.lambdify([self.domain_coordinates], self.jacobian, 'numpy')
-        try:
-            self.inverse_jacobian = self.jacobian.inv()
-            self.inverse_jacobian = sp.simplify(self.inverse_jacobian)
-            self.inverse_jacobian_lambda = sp.lambdify([self.domain_coordinates], self.inverse_jacobian, 'numpy')
-        except NonSquareMatrixError:
-            print(f'Warning: jacobian {self.jacobian} is not square')
-        except NonInvertibleMatrixError:
-            print(f'Warning: jacobian {self.jacobian} is non-invertible')
+        if calc_jac:
+            self.jacobian = self.calc_jacobian()
+            self.jacobian_lambda = sp.lambdify([self.domain_coordinates], self.jacobian, 'numpy')
+            if calc_inverse:
+                try:
+                    self.inverse_jacobian = self.jacobian.inv()
+                    # todo optional simplify
+                    self.inverse_jacobian = sp.simplify(self.inverse_jacobian)
+                    self.inverse_jacobian_lambda = sp.lambdify([self.domain_coordinates], self.inverse_jacobian, 'numpy')
+                except NonSquareMatrixError:
+                    print(f'Warning: jacobian {self.jacobian} is not square')
+                except NonInvertibleMatrixError:
+                    print(f'Warning: jacobian {self.jacobian} is non-invertible')
 
     def eval(self, domain_pos: np.ndarray) -> np.ndarray:
         return self.mapping_lambda(domain_pos)
