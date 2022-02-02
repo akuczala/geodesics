@@ -137,3 +137,14 @@ class MetricSpace:
             sp.tensorproduct(self.ginv, dg_permutes),
             (1, 2)
         ) / 2
+
+    def calc_riemann(self):
+        #mu rho nu sigma
+        dchrist = sp.derive_by_array(self.christ, self.coordinates)
+        #rho mu nu sigma
+        christ_sq = sp.tensorcontraction(sp.tensorproduct(self.christ, self.christ), (2, 3))
+        #rho sigma mu nu
+        half_R = (
+                sp.permutedims(dchrist, (1,3,0,2))
+                + sp.permutedims(christ_sq, (0,3,1,2)))
+        return half_R - sp.permutedims(half_R, (0,1,3,2))
